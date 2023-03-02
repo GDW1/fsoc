@@ -18,6 +18,9 @@ package cmd
 import (
 	"context"
 	"fmt"
+	"github.com/apex/log/handlers/cli"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/multi"
 	"os"
 
 	"github.com/apex/log"
@@ -70,12 +73,12 @@ func init() {
 	// Here you will define your flags and configuration settings.
 	// Cobra supports persistent flags, which, if defined here,
 	// will be global for your application.
-
 	rootCmd.PersistentFlags().StringVar(&cfgFile, "config", "", "config file (default is $HOME/.fsoc.yaml)")
 	rootCmd.PersistentFlags().StringVar(&cfgProfile, "profile", "", "access profile (default is current or \"default\")")
 	rootCmd.PersistentFlags().StringVarP(&outputFormat, "output", "o", "auto", "output format (auto, table, detail, json, yaml)")
 	rootCmd.PersistentFlags().String("fields", "", "perform specified fields transform/extract JQ expression")
 	rootCmd.PersistentFlags().BoolP("verbose", "v", false, "Enable detailed output")
+	rootCmd.PersistentFlags().String("log-loc", "/tmp", "determines the location of the fsoc log file")
 	rootCmd.SetOut(os.Stdout)
 	rootCmd.SetErr(os.Stderr)
 	rootCmd.SetIn(os.Stdin)
@@ -120,6 +123,16 @@ func helperFlagFormatter(fs *pflag.FlagSet) string {
 // preExecHook is executed after the command line is parsed but
 // before the command's handler is executed
 func preExecHook(cmd *cobra.Command, args []string) {
+	logLocation, _ := cmd.Flags().GetString("log-loc")
+	file, err := os.Open(logLocation + "/fsoc.log")
+	if err == nil {
+		os.Remove(logLocation + "/fsoc.log")
+	}
+	file, _ = os.Create(logLocation + "/fsoc.log")
+	log.SetHandler(multi.New(cli.New(os.Stderr), json.New(file)))
+	if logLocation == "/dev/null" {
+		log.SetHandler(multi.New(cli.New(os.Stderr)))
+	}
 	if verbose, _ := cmd.Flags().GetBool("verbose"); verbose {
 		log.SetLevel(log.InfoLevel)
 	} else {
