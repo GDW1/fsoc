@@ -18,12 +18,12 @@ package cmd
 import (
 	"context"
 	"fmt"
-	"github.com/apex/log/handlers/cli"
-	"github.com/apex/log/handlers/json"
-	"github.com/apex/log/handlers/multi"
 	"os"
 
 	"github.com/apex/log"
+	"github.com/apex/log/handlers/cli"
+	"github.com/apex/log/handlers/json"
+	"github.com/apex/log/handlers/multi"
 	"github.com/spf13/cobra"
 	"github.com/spf13/pflag"
 	"github.com/spf13/viper"
@@ -124,11 +124,11 @@ func helperFlagFormatter(fs *pflag.FlagSet) string {
 // before the command's handler is executed
 func preExecHook(cmd *cobra.Command, args []string) {
 	logLocation, _ := cmd.Flags().GetString("log-loc")
-	file, err := os.Open(logLocation + "/fsoc.log")
+	_, err := os.Open(logLocation + "/fsoc.log")
 	if err == nil {
 		os.Remove(logLocation + "/fsoc.log")
 	}
-	file, _ = os.Create(logLocation + "/fsoc.log")
+	file, _ := os.Create(logLocation + "/fsoc.log")
 	log.SetHandler(multi.New(cli.New(os.Stderr), json.New(file)))
 	if logLocation == "/dev/null" {
 		log.SetHandler(multi.New(cli.New(os.Stderr)))
