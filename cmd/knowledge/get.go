@@ -16,13 +16,13 @@ package knowledge
 
 import (
 	"fmt"
-	"github.com/cisco-open/fsoc/output"
 	"net/url"
 
 	"github.com/apex/log"
 	"github.com/spf13/cobra"
 
 	"github.com/cisco-open/fsoc/cmdkit"
+	"github.com/cisco-open/fsoc/output"
 )
 
 func newGetObjectCmd() *cobra.Command {

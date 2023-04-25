@@ -17,7 +17,6 @@ package optimize
 import (
 	"encoding/base32"
 	"fmt"
-	"github.com/cisco-open/fsoc/output"
 	"strings"
 
 	"github.com/apex/log"
@@ -25,6 +24,7 @@ import (
 
 	"github.com/cisco-open/fsoc/cmd/uql"
 	"github.com/cisco-open/fsoc/cmdkit"
+	"github.com/cisco-open/fsoc/output"
 )
 
 // reportCmd represents the report command
