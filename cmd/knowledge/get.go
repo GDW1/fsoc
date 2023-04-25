@@ -16,6 +16,7 @@ package knowledge
 
 import (
 	"fmt"
+	"github.com/cisco-open/fsoc/output"
 	"net/url"
 
 	"github.com/apex/log"
@@ -106,7 +107,8 @@ func getType(cmd *cobra.Command, args []string) error {
 	}
 
 	// execute command and print result
-	cmdkit.FetchAndPrint(cmd, getTypeUrl(fqtn), nil)
+	filter := output.CreateFilter("", []int{})
+	cmdkit.FetchAndPrint(cmd, getTypeUrl(fqtn), nil, filter)
 	return nil
 }
 
@@ -153,8 +155,9 @@ func getObject(cmd *cobra.Command, args []string, ltFlag layerType) error {
 		}
 		objStoreUrl = getObjectListUrl(fqtn)
 	}
+	filter := output.CreateFilter("", []int{})
 
-	cmdkit.FetchAndPrint(cmd, objStoreUrl, &cmdkit.FetchAndPrintOptions{Headers: headers})
+	cmdkit.FetchAndPrint(cmd, objStoreUrl, &cmdkit.FetchAndPrintOptions{Headers: headers}, filter)
 	return nil
 }
 

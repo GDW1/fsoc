@@ -81,11 +81,12 @@ func configGetContext(cmd *cobra.Command, args []string) error {
 	appendIfPresent("Token", ctx.Token)
 	appendIfPresent("Refresh Token", ctx.RefreshToken)
 	appendIfPresent("Secret File", ctx.SecretFile)
-
+	// create empty filter based on output filter struct
+	filter := output.CreateFilter("", []int{})
 	output.PrintCmdOutputCustom(cmd, ctx, &output.Table{
 		Headers: headers,
 		Lines:   [][]string{values},
 		Detail:  true,
-	})
+	}, filter)
 	return nil
 }

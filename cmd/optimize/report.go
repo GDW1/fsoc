@@ -127,11 +127,11 @@ func listReports(cmd *cobra.Command, args []string) error {
 	if err != nil {
 		return fmt.Errorf("extractReportData: %w", err)
 	}
-
+	filter := output.CreateFilter("", []int{})
 	output.PrintCmdOutput(cmd, struct {
 		Items []reportRow `json:"items"`
 		Total int         `json:"total"`
-	}{Items: reportRows, Total: len(reportRows)})
+	}{Items: reportRows, Total: len(reportRows)}, filter)
 
 	return nil
 }
