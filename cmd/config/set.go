@@ -75,6 +75,44 @@ func newCmdConfigSet() *cobra.Command {
 	return cmd
 }
 
+func getAuthFieldConfigRow(authService string) AuthFieldConfigRow {
+	return getAuthFieldConfigTable()[authService]
+}
+
+func validateWriteReq(cmd *cobra.Command, authService string, field string) error {
+	flags := cmd.Flags()
+	authProvider := authService
+	if flags.Changed("auth") {
+		authProvider, _ = flags.GetString("auth")
+	}
+	if authProvider == "" {
+		return fmt.Errorf("must provide an authentication type before or while writing to other context fields")
+	}
+	if getAuthFieldConfigRow(authProvider)[field] == 0 {
+		return fmt.Errorf("cannot write to field %s because it is not allowed for authservice %s", field, authProvider)
+	}
+	return nil
+}
+
+func clearContextForAuth(cmd *cobra.Command, authService string, ctxPtr *Context) {
+	authConditions := getAuthFieldConfigRow(authService)
+	if !(authConditions["server"] == 2 || cmd.Flags().Changed("server")) {
+		ctxPtr.URL = ""
+	}
+	if !(authConditions["url"] == 2 || cmd.Flags().Changed("url")) {
+		ctxPtr.URL = ""
+	}
+	if !(authConditions["tenant"] == 2 || cmd.Flags().Changed("tenant")) {
+		ctxPtr.Tenant = ""
+	}
+	if !(authConditions["token"] == 2 || cmd.Flags().Changed("token")) {
+		ctxPtr.Token = ""
+	}
+	if !(authConditions["secret-file"] == 2 || cmd.Flags().Changed("secret-file")) {
+		ctxPtr.SecretFile = ""
+	}
+}
+
 func validateUrl(providedUrl string) (string, error) {
 	parsedUrl, err := url.ParseRequestURI(providedUrl)
 	if err != nil {
@@ -146,6 +184,10 @@ func configSetContext(cmd *cobra.Command, args []string) {
 
 	// update only the fields for which flags were specified explicitly
 	if flags.Changed("server") {
+		err := validateWriteReq(cmd, ctxPtr.AuthMethod, "server")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		providedServer, _ := flags.GetString("server")
 		constructedUrl := "https://" + providedServer
 		cleanedUrl, err := validateUrl(constructedUrl)
@@ -156,6 +198,10 @@ func configSetContext(cmd *cobra.Command, args []string) {
 		ctxPtr.URL = cleanedUrl
 	}
 	if flags.Changed("url") {
+		err := validateWriteReq(cmd, ctxPtr.AuthMethod, "server")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		providedUrl, _ := flags.GetString("url")
 		cleanedUrl, err := validateUrl(providedUrl)
 		if err != nil {
@@ -164,9 +210,17 @@ func configSetContext(cmd *cobra.Command, args []string) {
 		ctxPtr.URL = cleanedUrl
 	}
 	if flags.Changed("tenant") {
+		err := validateWriteReq(cmd, ctxPtr.AuthMethod, "server")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		ctxPtr.Tenant, _ = flags.GetString("tenant")
 	}
 	if flags.Changed("token") {
+		err := validateWriteReq(cmd, ctxPtr.AuthMethod, "server")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		value, _ := flags.GetString("token")
 		if value == "-" { // token to come from stdin
 			scanner := bufio.NewScanner(os.Stdin)
@@ -177,10 +231,12 @@ func configSetContext(cmd *cobra.Command, args []string) {
 		}
 	}
 	if flags.Changed("secret-file") {
-
+		err := validateWriteReq(cmd, ctxPtr.AuthMethod, "server")
+		if err != nil {
+			log.Fatal(err.Error())
+		}
 		path, _ := flags.GetString("secret-file")
 		path = expandHomePath(path)
-		var err error
 		ctxPtr.SecretFile, err = filepath.Abs(path)
 		if err != nil {
 			ctxPtr.SecretFile = path
@@ -192,7 +248,11 @@ func configSetContext(cmd *cobra.Command, args []string) {
 		if val != "" && !slices.Contains(GetAuthMethodsStringList(), val) {
 			log.Fatalf(`Invalid --auth method %q; must be one of {"%v"}`, val, strings.Join(GetAuthMethodsStringList(), `", "`))
 		}
+		if val != ctxPtr.AuthMethod {
+			clearContextForAuth(cmd, val, ctxPtr)
+		}
 		ctxPtr.AuthMethod = val
+		// Clear all fields where neither of the conditions are met: it was just written to. It has a 2 in that field
 	}
 
 	if ctxPtr.AuthMethod == AuthMethodLocal {

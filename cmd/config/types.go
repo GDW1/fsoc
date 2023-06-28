@@ -19,6 +19,16 @@ import (
 	"net/http"
 )
 
+type AuthFieldConfig int8
+
+const (
+	ClearField AuthFieldConfig = 0 // Clear the field during auth switch; dont allow writes to field during config set
+	AllowField                 = 1 // Clear the field on auth switch; allow writes to field during config set
+	KeepField                  = 2 // Keep the field on an auth switch; allow write to field during config set
+)
+
+type AuthFieldConfigRow map[string]AuthFieldConfig
+
 const (
 	DefaultConfigFile = "~/.fsoc"
 	DefaultContext    = "default"
@@ -93,5 +103,59 @@ func GetAuthMethodsStringList() []string {
 		AuthMethodAgentPrincipal,
 		AuthMethodJWT,
 		AuthMethodLocal,
+	}
+}
+
+func getAuthFieldConfigTable() map[string]AuthFieldConfigRow {
+	return map[string]AuthFieldConfigRow{
+		AuthMethodOAuth: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodNone: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodJWT: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodServicePrincipal: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodAgentPrincipal: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodSessionManager: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
+		AuthMethodLocal: {
+			"token":       KeepField,
+			"secret-file": KeepField,
+			"tenant":      KeepField,
+			"url":         KeepField,
+			"server":      KeepField,
+		},
 	}
 }
