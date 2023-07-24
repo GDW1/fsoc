@@ -48,6 +48,8 @@ func getSolutionListCmd() *cobra.Command {
 		Bool("subscribed", false, "Use this to only see solutions that you are subscribed to")
 	solutionListCmd.Flags().
 		Bool("unsubscribed", false, "Use this to only see solutions that you are unsubscribed to")
+	solutionListCmd.Flags().
+		String("filter", "", "Use this to only add a filter to the Orion query")
 
 	solutionListCmd.MarkFlagsMutuallyExclusive("subscribed", "unsubscribed")
 
@@ -77,8 +79,21 @@ func getSolutionList(cmd *cobra.Command, args []string) {
 	} else if unsubscribed {
 		filters = []string{"filter=" + url.QueryEscape("data.isSubscribed ne true")}
 	}
+	if cmd.Flags().Changed("filter") {
+		filter, _ := cmd.Flags().GetString("filter")
+		validateFilter(filter)
+		filters = append(filters, "filter="+url.QueryEscape(filter))
+	}
 	println(solutionBaseURL)
 	cmdkit.FetchAndPrint(cmd, solutionBaseURL, &cmdkit.FetchAndPrintOptions{Headers: headers, IsCollection: true, Filters: filters})
+}
+
+func validateFilter(filter string) {
+	filterSections := strings.Split(filter, " ")
+	if len(filterSections) != 3 {
+		log.Fatalf("Filter must be of structure \"{field} {operator} {value} \"")
+	}
+	return
 }
 
 func getSolutionListUrl() string {
